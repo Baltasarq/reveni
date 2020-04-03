@@ -1,10 +1,13 @@
 CC=zcc
-CFLAGS=+zx -O3 -SO3 -clib=ansi
+CFLAGS=+zx -O3 -SO3
 
 all: reveni
 
-reveni: reveni.c player locs objs cmds
-	$(CC) $(CFLAGS) -create-app reveni.c player.o locs.o objs.o cmds.o -oreveni -lndos
+reveni: reveni.c ctrl player locs objs cmds
+	$(CC) $(CFLAGS) -create-app reveni.c ctrl.o player.o locs.o objs.o cmds.o -oreveni -lndos
+
+ctrl: ctrl.h ctrl.c
+	$(CC) $(CFLAGS) -c ctrl.c -octrl.o
 
 player: player.h player.c
 	$(CC) $(CFLAGS) -c player.c -oplayer.o
@@ -25,6 +28,7 @@ clean:
 	$(RM) *.cpc
 	$(RM) *.dsk
 	$(RM) *.bin
+	$(RM) *.def
 	$(RM) *.reloc
 
 run:

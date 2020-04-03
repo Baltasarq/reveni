@@ -24,6 +24,7 @@ typedef enum _CmdId {
     CmdWait,
     CmdBreak,
     CmdPush,
+    CmdLookAround,
     CmdDbg,
 
 	Cmd_Nop

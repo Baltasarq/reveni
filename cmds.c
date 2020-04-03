@@ -5,13 +5,18 @@
 #include "cmds.h"
 #include "locs.h"
 #include "objs.h"
+#include "ctrl.h"
 
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 #define RELEASE 1
+
+
+extern int read_key();
 
 
 const char * MSG_DONE = "Hecho.";
@@ -43,6 +48,7 @@ const char * MSG_HELP = "\"Bares\" es un juego basado en texto.\n"
             "\t\"empuja x\":       empuja un objeto 'x'.\n"
             "\t\"ataca x\":        ataca a 'x'.\n\n";
 
+void cmdLookAround_doIt(Player * player, Order * order);
 void cmdGo_doIt(Player * player, Order * order);
 void cmdHelp_doIt(Player * player, Order * order);
 void cmdEnd_doIt(Player * player, Order * order);
@@ -162,10 +168,15 @@ void init_cmds()
     cmds[18].doIt = cmdPush_doIt;
     cmds[18].words = " empuj pulsa pulso mueve muevo ";
 
+    // Push, move
+    cmds[19].cmdId = CmdLookAround;
+    cmds[19].doIt = cmdLookAround_doIt;
+    cmds[19].words = " m mira mirar ";
+
     // Debug
-    cmds[19].cmdId = CmdDbg;
-    cmds[19].doIt = cmdDbg_doIt;
-    cmds[19].words = " _dbg ";
+    cmds[20].cmdId = CmdDbg;
+    cmds[20].doIt = cmdDbg_doIt;
+    cmds[20].words = " _dbg ";
 
     // Nop
     cmdNop = &cmds[NumCmds - 1];
@@ -180,6 +191,7 @@ void cmdGo_doIt(Player * player, Order * order)
 
 	if ( dest_loc < NumLocs ) {
 		player->num_loc = dest_loc;
+		do_loc_desc( player->num_loc );
 	} else {
 		printf( "No se puede tomar ese rumbo." );
 	}
@@ -190,7 +202,8 @@ void cmdGo_doIt(Player * player, Order * order)
 void cmdHelp_doIt(Player * player, Order * order)
 {
     printf( MSG_HELP );
-    input( PROMPT_WAIT );
+    printf( PROMPT_WAIT );
+	read_key();
 }
 
 void cmdEnd_doIt(Player * player, Order * order)
@@ -201,6 +214,11 @@ void cmdEnd_doIt(Player * player, Order * order)
     } else {
         printf( "\n" );
     }
+}
+
+void cmdLookAround_doIt(Player * player, Order * order)
+{
+	do_loc_desc( player->num_loc );
 }
 
 void cmdInv_doIt(Player * player, Order * order)
@@ -406,7 +424,8 @@ void cmdDbg_doIt(Player * player, Order * order)
         itoa( objs[ i ].num_loc, buffer + strlen( buffer ), 10 );
 
         if ( i % 5 == 0 ) {
-            input( "ENTER..." );
+            printf( "ENTER..." );
+            read_key();
         }
 
         printf( "%s\n", buffer );
