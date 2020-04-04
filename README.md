@@ -21,6 +21,14 @@ Install the **z88dk** toolchain and the [fuse](https://sourceforge.net/projects/
  
  You can of course any other **ZX Spectrum** emulator. In that case, you will have to modify the *Makefile* or just grab *reveni.tap* and load it.
  
+ ## Progress
+ 
+ - [X] Project structure.
+ - [X] Game engine.
+ - [ ] Game plot.
+ - [ ] Game implementation.
+ - [ ] Drawn graphics (?).
+ 
  ## License
  
  Check the [License](https://github.com/Baltasarq/reveni/blob/master/LICENSE).
