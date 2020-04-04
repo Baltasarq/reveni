@@ -5,7 +5,7 @@
 #ifndef _INCLUDE_LOCS_H
 #define _INCLUDE_LOCS_H
 
-typedef enum _locLimits { NumLocs = 24, NumExits = 6 } LocLimits;
+typedef enum _locLimits { NumLocs = 3, NumExits = 6 } LocLimits;
 
 typedef enum _Exits {
     ExitNorth,

@@ -46,8 +46,13 @@ typedef struct _Order {
 	Obj * obj2;
 } Order;
 
+/** The vector with all available commands. */
 extern Cmd cmds[];
-extern Cmd * cmdNop;
+
+/** A pointer to the command "You cannot do that" */
+extern const Cmd * cmdNop;
+
+/** Prepares everything related to commands. */
 extern void init_cmds();
 
 #endif

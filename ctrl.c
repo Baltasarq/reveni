@@ -16,18 +16,13 @@
 #include <stdbool.h>
 
 
-const int MAX_COLS = 64;
-const int FIRST_LINE_TEXT = 8;
-const int FIRST_LINE_ANSWER = 15;
-const int FIRST_LINE_CMDS = 20;
-const int MAX_LINES = 24;
 const char * PROMPT = ":> ";
-const char * PROMPT_WAIT = "Pulsa ENTER...";
+const char * PROMPT_WAIT = "<...>";
 
 
 void cls()
 {
-	fputc_cons(12);
+	fputc_cons( 12 );
 	zx_border( INK_BLACK );
 	zx_colour( INK_WHITE | PAPER_BLACK );
 }
@@ -38,7 +33,7 @@ void set_default_colors()
     fputc_cons( 32 + INK_WHITE );
 }
 
-void set_answer_colors()
+void set_highlighted_colors()
 {
 	fputc_cons( 16 );
     fputc_cons( 32 + INK_YELLOW );
@@ -70,14 +65,18 @@ int read_key()
 		key = in_Inkey();
 	}
 
+	while( in_Inkey() != 0 );
+
 	return key;
 }
 
 /** Clears the input commands & answer section */
 void clear_cmds_answer()
 {
-	clga( 0, 8 * FIRST_LINE_ANSWER,
-		  32 * 8, ( MAX_LINES - FIRST_LINE_ANSWER ) * 8 );
+	clga( 0,
+		  8 * FIRST_LINE_ANSWER,
+		  32 * 8,
+		  ( MAX_LINES - FIRST_LINE_ANSWER ) * 8 );
 }
 
 void print_word_marked_initial(const char * word)
@@ -90,10 +89,35 @@ void print_word_marked_initial(const char * word)
 	printf( "%s", word + 1 );
 }
 
-char * input_cmd()
+void print_marked_initial_objs_ids_in_vector(Obj **v)
 {
-	static char buffer[32];
+	Obj ** obj = v;
 
+	set_highlighted_colors();
+	set_cursor_pos( FIRST_LINE_CMD_OBJS, 0 );
+
+	while( *obj != NULL ) {
+		print_word_marked_initial( (*obj)->id );
+		printf( " " );
+		++obj;
+	}
+
+	set_default_colors();
+}
+
+int read_cmd_key()
+{
+	int key = read_key();
+
+	while ( !isalpha( key ) ) {
+		key = tolower( read_key() );
+	}
+
+	return key;
+}
+
+void print_cmds()
+{
 	// Print basic options
 	set_cursor_pos( FIRST_LINE_CMDS, 0 );
 	print_word_marked_initial( "Inv " );
@@ -111,29 +135,70 @@ char * input_cmd()
 	print_word_marked_initial( "Deja... " );
 	fputc_cons( 'E' ); print_word_marked_initial( "mpuja... " );
 	print_word_marked_initial( "Tira de... " );
+}
 
-	int key = read_key();
+Order * input_cmd(Player * player)
+{
+	static const char * ExitCmds = "nseoab";
+	static Order toret;
 
-	while ( !isalpha( key ) ) {
-		key = read_key();
+	// Prepare order
+	memset( &toret, 0, sizeof( Order ) );
+
+	// Ask cmd
+	print_cmds();
+	int key = read_cmd_key();
+
+	if ( key == 'x'
+	  || key == 'c'
+	  || key == 'd'
+	  || key == 'm'
+	  || key == 't' )
+	{
+		const Obj ** present = get_objs_in_player_and( player->num_loc );
+		Obj ** obj = present;
+
+		print_marked_initial_objs_ids_in_vector( present );
+
+		key = read_cmd_key();
+
+		toret.cmd = &cmds[ CmdExamine ];
+
+		while( obj != NULL ) {
+			const char * obj_id = ( *obj )->id;
+
+			if ( *obj_id == key ) {
+				toret.obj1 = *obj;
+				toret.obj2 = NULL;
+				break;
+			}
+
+			++obj;
+		}
 	}
-
-	*buffer = 0;
-
-	if ( key == 'i'
-	  || key == 'n'
+	else
+	if ( key == 'i' ) {
+		toret.cmd = &cmds[ CmdInventory ];
+	}
+	else
+	if ( key == 'm' ) {
+		toret.cmd = &cmds[ CmdLookAround ];
+	}
+	else
+	if ( key == 'n'
 	  || key == 's'
 	  || key == 'e'
 	  || key == 'o'
-	  || key == 'm' )
+	  || key == 'a'
+	  || key == 'b' )
 	{
-		*buffer = key;
-		*( buffer + 1 ) = 0;
+		int pos = strchr( ExitCmds, key ) - ExitCmds;
+
+		toret.cmd = &cmds[ pos ];
 	}
 
 	clear_cmds_answer();
-	set_cursor_pos( FIRST_LINE_ANSWER, 0 );
-	return buffer;
+	return &toret;
 }
 
 void print(const char * txt)
@@ -152,155 +217,6 @@ void print(const char * txt)
     }
 
     printf( "%s\n", txt );
-}
-
-bool is_word_in_syns(char * word, char * syns)
-{
-  static char search_word[LengthWord + 3];
-  int word_length = strlen( word );
-
-  // Build search word
-  *search_word = ' ';
-  strcpy( search_word + 1, word );
-  *( search_word + word_length + 1 ) = ' ';
-  *( search_word + word_length + 2 ) = 0;
-
-  // Determine if included
-  // printf( "'%s' in '%s'%c", search_word, syns, 13 );
-  return ( strstr( syns, search_word ) != NULL );
-}
-
-bool is_word_ignorable(char * word)
-{
-  static const char * ignorable_words =
-      " un una unos unas el la los las "
-      "y tambien luego "
-      "a al ante bajo cabe con contra de desde en "
-      "entre hacia hasta para por segun "
-      "sin so sobre tras ";
-
-  return is_word_in_syns( word, ignorable_words );
-}
-
-void assign_word(Order * order, char * word)
-{
-  /* Truncate word, if needed */
-  if ( strlen( word ) > LengthWord ) {
-    *( word + LengthWord ) = 0;
-  }
-
-  /* Assign word to the appropriate slot in the order */
-  if ( order->word2 == NULL ) {                   // Still something to assign?
-    if ( !is_word_ignorable( word ) ) {
-      // Store word's address in Order's pointers
-      if ( order->verb == NULL ) {
-        order->verb = word;
-      } else {
-        if ( order->word1 == NULL ) {
-          order->word1 = word;
-        } else {
-          order->word2 = word;
-        }
-      }
-    }
-  }
-
-  return;
-}
-
-Cmd * find_cmd(char * word)
-{
-    Cmd * toret = NULL;
-    int i = 0;
-
-    if ( word != NULL
-      && strlen( word ) > 0 )
-    {
-        // Find command
-        for (; i < NumCmds; ++i) {
-            if ( is_word_in_syns( word, cmds[i].words ) ) {
-                break;
-            }
-        }
-
-        if ( i < NumCmds ) {
-          toret = &cmds[ i ];
-        } else {
-          toret = cmdNop;
-        }
-    }
-
-    return toret;
-}
-
-Obj * find_obj(Player * player, char * word)
-{
-    int i = 0;
-    Obj * toret = NULL;
-
-    if ( word != NULL
-      && strlen( word ) > 0 )
-    {
-        for(; i < NumObjs; ++i) {
-            if ( ( objs[ i ].num_loc == player->num_loc
-                || objs[ i ].num_loc == PLAYER_NUM_LOC )
-              && is_word_in_syns( word, objs[ i ].words ) )
-            {
-                toret = &objs[ i ];
-                break;
-            }
-        }
-    }
-
-	return toret;
-}
-
-void find_words(Player * player, Order * order)
-{
-    order->cmd = find_cmd( order->verb );
-    order->obj1 = find_obj( player, order->word1 );
-    order->obj2 = find_obj( player, order->word2 );
-}
-
-Order * parse(Player * player, char * buffer)
-{
-	static Order toret;
-	char * p = buffer;
-	char * word = buffer;
-
-	/* Init order */
-	memset( &toret, 0, sizeof( toret ) );
-	toret.cmd = cmdNop;
-
-	/* Get to the input */
-	while ( isspace( *p ) ) {
-		++p;
-		++word;
-	}
-
-	/* Run all over the input */
-	while ( *p != 0
-		 && *p != '\n'
-		 && *p != '\r'
-  	     && toret.word2 == NULL )
-	{
-		if ( *p == ' ' ) {
-			*p = 0;
-			assign_word( &toret, word );
-			word = p + 1;
-		} else {
-			*p = tolower( *p );
-		}
-
-		++p;
-	}
-
-	// Last word
-	*p = 0;
-	assign_word( &toret, word );
-
-	find_words( player, &toret );
-	return &toret;
 }
 
 void do_loc_desc(int num_loc)

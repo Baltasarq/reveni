@@ -18,14 +18,14 @@ void play_intro()
         	"(c) 2020 Baltasar <baltasarq@gmail.com>\n\n" );
 
 	print( "La nave espacial mercante 'Aristarco' vuelve desde "
-  			"'Proxima Centauri' con un cargamento minero.\n\n"
+  			"'Proxima Centauri' con un cargamento minero.\n"
   			"En la soledad del espacio, el aislado tripulante "
-  			"duerme en el interior de su vaina de crio-letargo.\n\n" );
+  			"duerme en el interior de su vaina de crio-letargo.\n" );
 
-	set_answer_colors();
+	set_highlighted_colors();
 
 	print( "De repente, un meteorito impacta en el carguero, "
-  			"y la nave te despierta a ti, Daesder, el piloto.\n\n" );
+  			"y la nave te despierta a ti, Daesder, el piloto.\n" );
 
 	set_default_colors();
 	print( "No hay tiempo. Tu vaina se acopla a otra mayor y sale "
@@ -37,7 +37,6 @@ void play_intro()
 
 int main()
 {
-	char * buffer;
 	Player player;
 	Order * order;
 
@@ -52,15 +51,12 @@ int main()
 		// Proc1
 		proc1( &player );
 
-		do {
-			buffer = input_cmd();
-		} while( strlen( buffer ) == 0 );
-
-		// Parse order
-		order = parse( &player, buffer );
+		order = input_cmd( &player );
 
 		if ( order->cmd != NULL ) {
-		    set_answer_colors();
+			set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+		    set_highlighted_colors();
+
         	resp( &player, order );
 
 			// Proc2

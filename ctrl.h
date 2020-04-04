@@ -9,11 +9,16 @@
 #include <stdbool.h>
 
 
-extern const int MAX_COLS;
-extern const int FIRST_LINE_TEXT;
-extern const int FIRST_LINE_ANSWER;
-extern const int FIRST_LINE_CMDS;
-extern const int MAX_LINES;
+enum Screen {
+				FIRST_LINE_TEXT = 8,
+				FIRST_LINE_ANSWER = 15,
+				FIRST_LINE_CMDS = 20,
+				MAX_LINES = 24,
+				FIRST_LINE_CMD_OBJS = 22,
+				MAX_COLS = 64
+};
+
+
 extern const char * PROMPT;
 extern const char * PROMPT_WAIT;
 
@@ -32,7 +37,7 @@ extern void print(const char * txt);
 
 extern void set_inverse_colors(bool is_inverse);
 extern void set_default_colors();
-extern void set_answer_colors();
+extern void set_highlighted_colors();
 extern void set_cursor_pos(int row, int col);
 
 /** Describes a given loc. */
@@ -40,8 +45,7 @@ extern void do_loc_desc(int num_loc);
 
 /** Takes an order from the user
   * @return A pointer to the char[] buffer */
-extern char * input_cmd();
-extern Order * parse(Player * player, char * buffer);
+extern Order * input_cmd();
 extern void restart(Player * player);
 
 #endif
