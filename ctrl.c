@@ -5,15 +5,17 @@
 #include "locs.h"
 #include "cmds.h"
 #include "objs.h"
+#include "player.h"
 
 #include <input.h>
 #include <spectrum.h>
 #include <graphics.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <stddef.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 
 const char * PROMPT = ":> ";
@@ -27,6 +29,15 @@ void cls()
 	zx_colour( INK_WHITE | PAPER_BLACK );
 }
 
+void set_colors(int ink, int paper)
+{
+    fputc_cons( 16 );
+    fputc_cons( 32 + ink );
+    
+    fputc_cons( 17 );
+    fputc_cons( 32 + paper );
+}
+
 void set_default_colors()
 {
 	fputc_cons( 16 );
@@ -36,7 +47,7 @@ void set_default_colors()
 void set_highlighted_colors()
 {
 	fputc_cons( 16 );
-    fputc_cons( 32 + INK_YELLOW );
+    fputc_cons( 48 + INK_CYAN );
 }
 
 void set_inverse_colors(bool is_inverse)
@@ -61,13 +72,21 @@ int read_key()
 {
 	int key = in_Inkey();
 
+    // Read from keyboard
 	while ( key == 0 ) {
 		key = in_Inkey();
 	}
 
+    // Wait until key is released
 	while( in_Inkey() != 0 );
 
 	return key;
+}
+
+void wait_for_key()
+{
+    print( PROMPT_WAIT );
+    read_key();
 }
 
 /** Clears the input commands & answer section */
@@ -84,9 +103,9 @@ void print_word_marked_initial(const char * word)
 	char initial_ch = *word;
 
 	set_inverse_colors( true );
-	printf( "%c", initial_ch );
+	print_char( initial_ch );
 	set_inverse_colors( false );
-	printf( "%s", word + 1 );
+	print( word + 1 );
 }
 
 void print_marked_initial_objs_ids_in_vector(Obj **v)
@@ -97,8 +116,8 @@ void print_marked_initial_objs_ids_in_vector(Obj **v)
 	set_cursor_pos( FIRST_LINE_CMD_OBJS, 0 );
 
 	while( *obj != NULL ) {
-		print_word_marked_initial( (*obj)->id );
-		printf( " " );
+		print_word_marked_initial( ( *obj )->id );
+		print_char( ' ' );
 		++obj;
 	}
 
@@ -133,8 +152,9 @@ void print_cmds()
 	// Print object manipulation options
 	print_word_marked_initial( "Coge... " );
 	print_word_marked_initial( "Deja... " );
-	fputc_cons( 'E' ); print_word_marked_initial( "mpuja... " );
+	print( "Em" ); print_word_marked_initial( "puja... " );
 	print_word_marked_initial( "Tira de... " );
+	print_word_marked_initial( "Rompe... " );
 }
 
 Order * input_cmd(Player * player)
@@ -152,24 +172,39 @@ Order * input_cmd(Player * player)
 	if ( key == 'x'
 	  || key == 'c'
 	  || key == 'd'
-	  || key == 'm'
-	  || key == 't' )
+	  || key == 'p'
+	  || key == 't'
+	  || key == 'r' )
 	{
+		// Get the present objects
 		const Obj ** present = get_objs_in_player_and( player->num_loc );
 		Obj ** obj = present;
 
+		// Infer command
+		int cmd_index = CmdExamine;
+
+		switch( key ) {
+			case 'c':	cmd_index = CmdTake; break;
+			case 'd':	cmd_index = CmdDrop; break;
+			case 'p':	cmd_index = CmdPush; break;
+			case 't':	cmd_index = CmdPull; break;
+			case 'r':	cmd_index = CmdBreak; break;
+		}
+
+		toret.cmd = &cmds[ cmd_index ];
+
+		// Show them
 		print_marked_initial_objs_ids_in_vector( present );
 
+		// Which one?
 		key = read_cmd_key();
 
-		toret.cmd = &cmds[ CmdExamine ];
-
+		// Which object?
 		while( obj != NULL ) {
 			const char * obj_id = ( *obj )->id;
 
 			if ( *obj_id == key ) {
 				toret.obj1 = *obj;
-				toret.obj2 = NULL;
 				break;
 			}
 
@@ -201,6 +236,11 @@ Order * input_cmd(Player * player)
 	return &toret;
 }
 
+void print_char(int ch)
+{
+    fputc_cons( ch );
+}
+
 void print(const char * txt)
 {
     int pos = MAX_COLS - 1;
@@ -216,30 +256,34 @@ void print(const char * txt)
         pos += MAX_COLS - 1;
     }
 
-    printf( "%s\n", txt );
+    printk( txt );
 }
 
-void do_loc_desc(int num_loc)
+void draw_pic(int * ddata)
 {
-	int num_objs = how_many_objs_in( num_loc );
-
-	// Show loc desc
-	cls();
-	set_cursor_pos( FIRST_LINE_TEXT, 0 );
-    print( locs[ num_loc ].desc );
-
-	// Show objects here
-	if ( num_objs > 0 ) {
-		printf( "\nPuedes ver:" );
-		num_objs = list_objs_in( num_loc );
-	}
-
-	printf( "\n\n" );
-}
-
-void restart(Player * player)
-{
-    init_game( player );
-    play_intro();
-    cls();
+    int pos = 0;
+    
+    for(;ddata[ pos ] != 0; ++pos) {
+        switch( ddata[ pos ] ) {
+            case 1:
+                ++pos;
+                draw( ddata[ pos ], ddata[ pos + 1 ],
+                      ddata[ pos + 2 ], ddata[ pos + 3 ] );
+                pos += 3;
+                break;
+            case 2:
+                ++pos;
+                circle( ddata[ pos ], ddata[ pos + 1 ],
+                        ddata[ pos + 2 ], 1 );
+                pos += 2;
+                break;
+            case 3:
+                ++pos;
+                fill( ddata[ pos ], ddata[ pos + 1 ] );
+                ++pos;
+                break;
+        }
+    }
+    
+    return;
 }

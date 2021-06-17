@@ -8,8 +8,8 @@
 #include "ctrl.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -27,28 +27,8 @@ const char * MSG_IMPOSSIBLE = "Es imposible.";
 const char * MSG_ALREADY_CARRIED = "Pero si ya lo tienes...";
 const char * MSG_DONT_CARRIED = "No llevas eso contigo.";
 const char * MSG_SPECIFY_CLOTHING = "Debes especificar una prenda.";
-const char * MSG_HELP = "\"Bares\" es un juego basado en texto.\n"
-            "Los comandos que se pueden utilizar son:\n"
-            "\t\"fin\":            termina el juego.\n"
-            "\t\"ayuda\":          muestra esta ayuda.\n"
-            "\t\"nada\":           nada o bucea.\n"
-            "\t\"n, norte\":       el jugador avanza al norte (adelante).\n"
-            "\t\"s, sur\":         el jugador avanza al sur (retrocede).\n"
-            "\t\"e, este\":        el jugador avanza al este (derecha).\n"
-            "\t\"o, oeste\":       el jugador avanza al oeste (izquierda).\n"
-            "\t\"x, salidas\":     muestra las salidas obvias visibles.\n"
-            "\t\"z, espera\":      espera durante un turno.\n"
-            "\t\"i, inventario\":  muestra los objetos llevados.\n"
-            "\t\"ex, examina x\":  describe un objeto 'x' presente.\n"
-            "\t\"coge x\":         coge un objeto 'x' de la localidad.\n"
-            "\t\"ponte x\":        ponerse un objeto 'x' en el inventario.\n"
-            "\t\"deja x\":         deja un objeto 'x' del inventario.\n"
-            "\t\"quitate x\":      quitarse un objeto 'x' ya puesto.\n"
-            "\t\"rompe x\":        rompe un objeto 'x'.\n"
-            "\t\"empuja x\":       empuja un objeto 'x'.\n"
-            "\t\"ataca x\":        ataca a 'x'.\n\n";
 
-void cmdLookAround_doIt(Player * player, Order * order);
+
 void cmdGo_doIt(Player * player, Order * order);
 void cmdHelp_doIt(Player * player, Order * order);
 void cmdEnd_doIt(Player * player, Order * order);
@@ -64,6 +44,8 @@ void cmdDisrobe_doIt(Player * player, Order * order);
 void cmdWait_doIt(Player * player, Order * order);
 void cmdBreak_doIt(Player * player, Order * order);
 void cmdPush_doIt(Player * player, Order * order);
+void cmdPull_doIt(Player * player, Order * order);
+void cmdLookAround_doIt(Player * player, Order * order);
 void cmdDbg_doIt(Player * player, Order * order);
 
 Cmd cmds[NumCmds];
@@ -168,15 +150,20 @@ void init_cmds()
     cmds[18].doIt = cmdPush_doIt;
     cmds[18].words = " empuj pulsa pulso mueve muevo ";
 
-    // Push, move
-    cmds[19].cmdId = CmdLookAround;
-    cmds[19].doIt = cmdLookAround_doIt;
-    cmds[19].words = " m mira mirar ";
+    // Pull
+    cmds[19].cmdId = CmdPull;
+    cmds[19].doIt = cmdPull_doIt;
+    cmds[19].words = " tira tiro ";
+
+    // Look around
+    cmds[20].cmdId = CmdLookAround;
+    cmds[20].doIt = cmdLookAround_doIt;
+    cmds[20].words = " m mira mirar ";
 
     // Debug
-    cmds[20].cmdId = CmdDbg;
-    cmds[20].doIt = cmdDbg_doIt;
-    cmds[20].words = " _dbg ";
+    cmds[21].cmdId = CmdDbg;
+    cmds[21].doIt = cmdDbg_doIt;
+    cmds[21].words = " _dbg ";
 
     // Nop
     cmdNop = &cmds[NumCmds - 1];
@@ -193,7 +180,7 @@ void cmdGo_doIt(Player * player, Order * order)
 		player->num_loc = dest_loc;
 		do_loc_desc( player->num_loc );
 	} else {
-		printf( "No se puede tomar ese rumbo." );
+		println( "No se puede tomar ese rumbo." );
 	}
 
 	return;
@@ -201,9 +188,7 @@ void cmdGo_doIt(Player * player, Order * order)
 
 void cmdHelp_doIt(Player * player, Order * order)
 {
-    printf( MSG_HELP );
-    printf( PROMPT_WAIT );
-	read_key();
+    // Not used with this game engine.
 }
 
 void cmdEnd_doIt(Player * player, Order * order)
@@ -212,7 +197,7 @@ void cmdEnd_doIt(Player * player, Order * order)
         cls();
         exit( 0 );
     } else {
-        printf( "\n" );
+        lf();
     }
 }
 
@@ -226,15 +211,15 @@ void cmdInv_doIt(Player * player, Order * order)
 	int num = 0;
 	int i = 0;
 
-	printf( "Llevas contigo: " );
+	println( "Llevas contigo: " );
 
 	num = list_objs_in( PLAYER_NUM_LOC );
 
 	if ( num == 0 ) {
-		printf( "Nada." );
+		println( "Nada." );
 	}
 
-	printf( "\n" );
+	lf();
 	return;
 }
 
@@ -252,8 +237,7 @@ void cmdEx_doIt(Player * player, Order * order)
 		msg = order->obj1->desc;
 	}
 
-	print( msg );
-	printf( "\n" );
+	println( msg );
 }
 
 void cmdExits_doIt(Player * player, Order * order)
@@ -267,19 +251,20 @@ void cmdExits_doIt(Player * player, Order * order)
     int i = 0;
     Loc * loc = &locs[ player->num_loc ];
 
-    printf( "Salidas visibles: " );
+    print( "Salidas visibles: " );
     for(; i < NumExits; ++i) {
         if ( loc->exits[ i ] < NumLocs ) {
           hay_salidas = true;
-          printf( "%s ", salidas[ i ] );
+          print( salidas[ i ] );
+          print_char( ' ' );
         }
     }
 
     if ( !hay_salidas ) {
-        printf( "ninguna." );
+        print( "ninguna." );
     }
 
-    return;
+    lf();
 }
 
 void cmdTake_doIt(Player * player, Order * order)
@@ -292,6 +277,10 @@ void cmdTake_doIt(Player * player, Order * order)
 			if ( obj->atr != Static ) {
 				msg = MSG_DONE;
 				obj->num_loc = PLAYER_NUM_LOC;
+                
+				do_loc_desc( player->num_loc );                
+                set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+                set_highlighted_colors();
 			} else {
 				msg = MSG_IMPOSSIBLE;
 			}
@@ -302,7 +291,7 @@ void cmdTake_doIt(Player * player, Order * order)
 		}
 	}
 
-	printf( "%s\n", msg );
+	println( msg );
 }
 
 void cmdDrop_doIt(Player * player, Order * order)
@@ -314,29 +303,22 @@ void cmdDrop_doIt(Player * player, Order * order)
             if ( !order->obj1->worn ) {
     			msg = MSG_DONE;
     			order->obj1->num_loc = player->num_loc;
+                
+    			do_loc_desc( player );
+                set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+                set_highlighted_colors();
             } else {
                 msg = "No puedes, lo llevas puesto.";
             }
 		}
 	}
 
-	printf( "%s\n", msg );
+	println( msg );
 }
 
 void cmdSwim_doIt(Player * player, Order * order)
 {
-	char * msg = "No tiene sentido nadar.";
-	int num_loc = player->num_loc;
-
-	if ( num_loc == 0 ) {
-		msg = "Buceas y buceas, apreciando el coral.";
-	}
-	else
-	if ( num_loc <= 7 ) {
-		msg = "No quiero meterme en ese agua, a saber lo que oculta...";
-	}
-
-	printf( "%s\n", msg );
+	// Not used with this game.
 }
 
 void cmdWear_doIt(Player * player, Order * order)
@@ -361,7 +343,7 @@ void cmdWear_doIt(Player * player, Order * order)
 		msg = MSG_SPECIFY_CLOTHING;
 	}
 
-    printf( "%s\n", msg );
+    println( msg );
 }
 
 void cmdDisrobe_doIt(Player * player, Order * order)
@@ -384,61 +366,35 @@ void cmdDisrobe_doIt(Player * player, Order * order)
 		msg = MSG_SPECIFY_CLOTHING;
 	}
 
-    printf( "%s\n", msg );
+    println( msg );
 }
 
 void cmdWait_doIt(Player * player, Order * order)
 {
-    print( "Pasa el tiempo..." );
+    println( "Pasa el tiempo..." );
 }
 
 void cmdBreak_doIt(Player * player, Order * order)
 {
-    print( "La violencia no soluciona nada." );
+    println( "La simple violencia no soluciona nada en este caso." );
 }
 
 void cmdPush_doIt(Player * player, Order * order)
 {
-    print( "No tiene sentido." );
+    println( "No tiene sentido." );
+}
+
+void cmdPull_doIt(Player * player, Order * order)
+{
+    println( "No tiene sentido." );
 }
 
 void cmdDbg_doIt(Player * player, Order * order)
 {
-#ifndef RELEASE
-    static char buffer[30];
-    int i;
-
-    printf( "Dbg Info\n" );
-
-    // Num loc
-    strcpy( buffer, "Player loc: " );
-    itoa( player->num_loc, buffer + strlen( buffer ), 10 );
-    printf( "%s\n", buffer );
-
-    // Objects
-    for(i = 0; i < NumObjs; ++i) {
-        itoa( i, buffer, 10 );
-        strcpy( buffer + strlen( buffer ), " " );
-        strcpy( buffer + strlen( buffer ), objs[ i ].id );
-        strcpy( buffer + strlen( buffer ), " @" );
-        itoa( objs[ i ].num_loc, buffer + strlen( buffer ), 10 );
-
-        if ( i % 5 == 0 ) {
-            printf( "ENTER..." );
-            read_key();
-        }
-
-        printf( "%s\n", buffer );
-    }
-#else
-    print( MSG_CANT_DO );
-#endif
-
-    return;
+    println( MSG_CANT_DO );
 }
 
 void cmdNop_doIt(Player * player, Order * order)
 {
-    printf( MSG_CANT_DO );
+    println( MSG_CANT_DO );
 }
-

@@ -1,8 +1,16 @@
+# Executable
+reveni
+
+# Compiler outputs
+*.def
+*.tap
+
 # Prerequisites
 *.d
 
 # Object files
 *.o
+*.bin
 *.ko
 *.obj
 *.elf

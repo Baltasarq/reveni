@@ -4,7 +4,7 @@ CFLAGS=+zx -O3 -SO3
 all: reveni
 
 reveni: reveni.c ctrl player locs objs cmds
-	$(CC) $(CFLAGS) -create-app reveni.c ctrl.o player.o locs.o objs.o cmds.o -oreveni -lndos
+	$(CC) $(CFLAGS) -create-app reveni.c ctrl.o player.o locs.o objs.o cmds.o -oreveni -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic
 
 ctrl: ctrl.h ctrl.c
 	$(CC) $(CFLAGS) -c ctrl.c -octrl.o

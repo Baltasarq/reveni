@@ -7,8 +7,6 @@
 
 #include "objs.h"
 
-typedef enum _cmdLimits { LengthWord = 5, NumCmds = 21 } CmdLimits;
-
 typedef enum _CmdId {
 	CmdNorth, CmdSouth, CmdEast, CmdWest, CmdUp, CmdDown,
 	CmdEnd,
@@ -24,11 +22,17 @@ typedef enum _CmdId {
     CmdWait,
     CmdBreak,
     CmdPush,
+    CmdPull,
     CmdLookAround,
     CmdDbg,
 
 	Cmd_Nop
 } CmdId;
+
+typedef enum _cmdLimits {
+				LengthWord = 5,
+				NumCmds = Cmd_Nop + 1 }
+CmdLimits;
 
 typedef struct _Cmd {
 	CmdId cmdId;

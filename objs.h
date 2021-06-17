@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-typedef enum _objLimits { NumObjs = 4 } ObjLimits;
+typedef enum _objLimits { NumObjs = 15 } ObjLimits;
 
 extern const int PLAYER_NUM_LOC;
 extern const int LIMBO;
