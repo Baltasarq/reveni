@@ -9,6 +9,7 @@ reveni
 *.d
 
 # Object files
+obj/
 *.o
 *.bin
 *.ko
