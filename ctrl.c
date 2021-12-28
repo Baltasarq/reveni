@@ -8,7 +8,6 @@
 #include "player.h"
 
 #include <input.h>
-#include <spectrum.h>
 #include <graphics.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,70 +15,46 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <spectrum.h>
+#include <sound.h>
 
 
-const char * PROMPT = ":> ";
 const char * PROMPT_WAIT = "<...>";
 
 
 void cls()
 {
-	fputc_cons( 12 );
+	zx_cls();
 	zx_border( INK_BLACK );
 	zx_colour( INK_WHITE | PAPER_BLACK );
 }
 
-void set_colors(int ink, int paper)
+void set_colors(byte ink, byte paper)
 {
-    fputc_cons( 16 );
-    fputc_cons( 32 + ink );
-    
-    fputc_cons( 17 );
-    fputc_cons( 32 + paper );
+	zx_setink( ink );
+	zx_setpaper( paper );
 }
 
 void set_default_colors()
 {
-	fputc_cons( 16 );
-    fputc_cons( 32 + INK_WHITE );
+	zx_setink( INK_WHITE );
 }
 
 void set_highlighted_colors()
 {
-	fputc_cons( 16 );
-    fputc_cons( 48 + INK_CYAN );
+	zx_setink( INK_CYAN );
 }
 
-void set_inverse_colors(bool is_inverse)
+byte read_key()
 {
-	int inverse = 48;							// 48 == off, 49 == on
-
-	if ( is_inverse ) {
-		inverse = 49;
-	}
-
-	fputc_cons(20); fputc_cons( inverse );
-}
-
-void set_cursor_pos(int row, int col)
-{
-	fputc_cons( 22 );
-	fputc_cons( row + 32 );
-	fputc_cons( col + 32 );
-}
-
-int read_key()
-{
-	int key = in_Inkey();
+	byte key = in_Inkey();
 
     // Read from keyboard
 	while ( key == 0 ) {
 		key = in_Inkey();
 	}
 
-    // Wait until key is released
-	while( in_Inkey() != 0 );
-
+    in_WaitForNoKey();
 	return key;
 }
 
@@ -93,40 +68,40 @@ void wait_for_key()
 void clear_cmds_answer()
 {
 	clga( 0,
-		  8 * FIRST_LINE_ANSWER,
+		  8 * SCR_FIRST_LINE_ANSWER,
 		  32 * 8,
-		  ( MAX_LINES - FIRST_LINE_ANSWER ) * 8 );
+		  ( SCR_MAX_LINES - SCR_FIRST_LINE_ANSWER ) * 8 );
 }
 
 void print_word_marked_initial(const char * word)
 {
 	char initial_ch = *word;
 
-	set_inverse_colors( true );
-	print_char( initial_ch );
-	set_inverse_colors( false );
+	zx_setattrinverse( true );
+	fputc_cons( initial_ch );
+	zx_setattrinverse( false );
 	print( word + 1 );
 }
 
-void print_marked_initial_objs_ids_in_vector(Obj **v)
+void print_marked_initial_objs_ids_in_vector(const Obj **v)
 {
-	Obj ** obj = v;
+	const Obj ** obj = v;
 
 	set_highlighted_colors();
-	set_cursor_pos( FIRST_LINE_CMD_OBJS, 0 );
+	zx_movecursorto( SCR_FIRST_LINE_CMD_OBJS, 0 );
 
 	while( *obj != NULL ) {
 		print_word_marked_initial( ( *obj )->id );
-		print_char( ' ' );
+		fputc_cons( ' ' );
 		++obj;
 	}
 
 	set_default_colors();
 }
 
-int read_cmd_key()
+byte read_cmd_key()
 {
-	int key = read_key();
+	byte key = read_key();
 
 	while ( !isalpha( key ) ) {
 		key = tolower( read_key() );
@@ -138,7 +113,7 @@ int read_cmd_key()
 void print_cmds()
 {
 	// Print basic options
-	set_cursor_pos( FIRST_LINE_CMDS, 0 );
+	zx_movecursorto( SCR_FIRST_LINE_CMDS, 0 );
 	print_word_marked_initial( "Inv " );
 	print_word_marked_initial( "Mira alrededor " );
 	fputc_cons( 'E' ); print_word_marked_initial( "xamina... " );
@@ -157,7 +132,7 @@ void print_cmds()
 	print_word_marked_initial( "Rompe... " );
 }
 
-Order * input_cmd(Player * player)
+const Order * input_cmd(const Player * player)
 {
 	static const char * ExitCmds = "nseoab";
 	static Order toret;
@@ -167,7 +142,10 @@ Order * input_cmd(Player * player)
 
 	// Ask cmd
 	print_cmds();
-	int key = read_cmd_key();
+	byte key = read_cmd_key();
+
+	// Play sound
+	bit_fx( 6 );
 
 	if ( key == 'x'
 	  || key == 'c'
@@ -176,12 +154,8 @@ Order * input_cmd(Player * player)
 	  || key == 't'
 	  || key == 'r' )
 	{
-		// Get the present objects
-		const Obj ** present = get_objs_in_player_and( player->num_loc );
-		Obj ** obj = present;
-
 		// Infer command
-		int cmd_index = CmdExamine;
+		byte cmd_index = CmdExamine;
 
 		switch( key ) {
 			case 'c':	cmd_index = CmdTake; break;
@@ -193,7 +167,11 @@ Order * input_cmd(Player * player)
 
 		toret.cmd = &cmds[ cmd_index ];
 
-		// Show them
+
+		// Show objects
+		const Obj ** present = get_objs_in_player_and( player->num_loc );
+		const Obj ** obj = present;
+
 		print_marked_initial_objs_ids_in_vector( present );
 
 		// Which one?
@@ -210,6 +188,9 @@ Order * input_cmd(Player * player)
 
 			++obj;
 		}
+
+		// Play sound
+		bit_fx( 6 );
 	}
 	else
 	if ( key == 'i' ) {
@@ -227,7 +208,7 @@ Order * input_cmd(Player * player)
 	  || key == 'a'
 	  || key == 'b' )
 	{
-		int pos = strchr( ExitCmds, key ) - ExitCmds;
+		byte pos = strchr( ExitCmds, key ) - ExitCmds;
 
 		toret.cmd = &cmds[ pos ];
 	}
@@ -236,14 +217,9 @@ Order * input_cmd(Player * player)
 	return &toret;
 }
 
-void print_char(int ch)
-{
-    fputc_cons( ch );
-}
-
 void print(const char * txt)
 {
-    int pos = MAX_COLS - 1;
+    byte pos = SCR_MAX_COLS - 1;
 
     while( pos < strlen( txt ) ) {
         while( pos > 2
@@ -253,37 +229,39 @@ void print(const char * txt)
         }
 
         txt[ pos ] = '\n';
-        pos += MAX_COLS - 1;
+        pos += SCR_MAX_COLS - 1;
     }
 
     printk( txt );
 }
 
-void draw_pic(int * ddata)
+void draw_pic(const byte * ddata)
 {
-    int pos = 0;
-    
-    for(;ddata[ pos ] != 0; ++pos) {
-        switch( ddata[ pos ] ) {
-            case 1:
-                ++pos;
-                draw( ddata[ pos ], ddata[ pos + 1 ],
-                      ddata[ pos + 2 ], ddata[ pos + 3 ] );
-                pos += 3;
-                break;
-            case 2:
-                ++pos;
-                circle( ddata[ pos ], ddata[ pos + 1 ],
-                        ddata[ pos + 2 ], 1 );
-                pos += 2;
-                break;
-            case 3:
-                ++pos;
-                fill( ddata[ pos ], ddata[ pos + 1 ] );
-                ++pos;
-                break;
-        }
-    }
+	if ( ddata != NULL ) {
+		byte pos = 0;
+		
+		for(;ddata[ pos ] != DCMD_EOD; ++pos) {
+			switch( ddata[ pos ] ) {
+				case DCMD_Line:
+					++pos;
+					draw( ddata[ pos ], ddata[ pos + 1 ],
+						ddata[ pos + 2 ], ddata[ pos + 3 ] );
+					pos += 3;
+					break;
+				case DCMD_Circle:
+					++pos;
+					circle( ddata[ pos ], ddata[ pos + 1 ],
+							ddata[ pos + 2 ], 1 );
+					pos += 2;
+					break;
+				case DCMD_Fill:
+					++pos;
+					fill( ddata[ pos ], ddata[ pos + 1 ] );
+					++pos;
+					break;
+			}
+		}
+	}
     
     return;
 }

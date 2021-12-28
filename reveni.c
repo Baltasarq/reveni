@@ -1,21 +1,23 @@
 // Reveni (c) 2020 Baltasar MIT License <baltasarq@gmail.com>
 
 
+#include "ctrl.h"
+#include "player.h"
+#include "locs.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "ctrl.h"
-#include "player.h"
+#include <spectrum.h>
 
 
 void draw_presentation()
 {
-    int pic_data[] = {
-        2, /* circle */ 50, 10, 10,
-        3, /* fill   */ 50, 10,
-        2, /* circle */ 100, 15, 25,
-        0  /* end    */
+    byte pic_data[] = {
+        DCMD_Circle, 50, 10, 10,
+        DCMD_Fill, 50, 10,
+        DCMD_Circle, 100, 15, 25,
+        DCMD_EOD
     };
     
     draw_pic( pic_data );
@@ -28,7 +30,7 @@ void play_intro()
 
     draw_presentation();
     
-	set_cursor_pos( FIRST_LINE_TEXT, 0 );
+	zx_movecursorto( SCR_FIRST_LINE_TEXT, 0 );
 	println( "Reveni v1.0 20200411 "
         	"(c) 2020 Baltasar <baltasarq@gmail.com>" );
     lf();
@@ -55,15 +57,16 @@ void play_intro()
 int main()
 {
 	Player player;
-	Order * order;
+	const Order * order;
 
-	init_game( &player );
 	play_intro();
 
 	// Main loop
 	cls();
 	set_default_colors();
+	init_game( &player );
 	do_loc_desc( &player );
+	show_hud( &player );
 
 	do {
 		// Proc1
@@ -72,7 +75,7 @@ int main()
 		order = input_cmd( &player );
 
 		if ( order->cmd != NULL ) {
-			set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+			zx_movecursorto( SCR_FIRST_LINE_ANSWER, 0 );
 		    set_highlighted_colors();
 
         	resp( &player, order );

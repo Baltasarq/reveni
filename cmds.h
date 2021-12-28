@@ -45,9 +45,9 @@ typedef struct _Order {
 	char * word1;
 	char * word2;
 
-	Cmd  * cmd;
-	Obj * obj1;
-	Obj * obj2;
+	const Cmd  * cmd;
+	const Obj * obj1;
+	const Obj * obj2;
 } Order;
 
 /** The vector with all available commands. */

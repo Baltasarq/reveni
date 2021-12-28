@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <spectrum.h>
 
 
 const int PLAYER_NUM_LOC = -128;
@@ -230,7 +231,7 @@ Obj * locate_obj_by_id(const char * id)
     if ( toret == NULL ) {
         print( "*** ERROR: Unable to find: '" );
         print( id );
-        print_char( '\'' );
+        fputc_cons( '\'' );
         lf();
         exit( EXIT_FAILURE );
     }

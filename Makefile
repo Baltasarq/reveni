@@ -1,5 +1,5 @@
 CC=zcc
-CFLAGS=+zx -O3 -SO3
+CFLAGS=+zx
 OBJ=obj
 
 all: reveni

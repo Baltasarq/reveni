@@ -7,11 +7,13 @@
 #include "objs.h"
 #include "ctrl.h"
 
+#include <spectrum.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
 
 #define RELEASE 1
 
@@ -29,24 +31,24 @@ const char * MSG_DONT_CARRIED = "No llevas eso contigo.";
 const char * MSG_SPECIFY_CLOTHING = "Debes especificar una prenda.";
 
 
-void cmdGo_doIt(Player * player, Order * order);
-void cmdHelp_doIt(Player * player, Order * order);
-void cmdEnd_doIt(Player * player, Order * order);
-void cmdInv_doIt(Player * player, Order * order);
-void cmdNop_doIt(Player * player, Order * order);
-void cmdEx_doIt(Player * player, Order * order);
-void cmdTake_doIt(Player * player, Order * order);
-void cmdDrop_doIt(Player * player, Order * order);
-void cmdSwim_doIt(Player * player, Order * order);
-void cmdExits_doIt(Player * player, Order * order);
-void cmdWear_doIt(Player * player, Order * order);
-void cmdDisrobe_doIt(Player * player, Order * order);
-void cmdWait_doIt(Player * player, Order * order);
-void cmdBreak_doIt(Player * player, Order * order);
-void cmdPush_doIt(Player * player, Order * order);
-void cmdPull_doIt(Player * player, Order * order);
-void cmdLookAround_doIt(Player * player, Order * order);
-void cmdDbg_doIt(Player * player, Order * order);
+void cmdGo_doIt(const Player * player, const Order * order);
+void cmdHelp_doIt(const Player * player, const Order * order);
+void cmdEnd_doIt(const Player * player, const Order * order);
+void cmdInv_doIt(const Player * player, const Order * order);
+void cmdNop_doIt(const Player * player, const Order * order);
+void cmdEx_doIt(const Player * player, const Order * order);
+void cmdTake_doIt(const Player * player, const Order * order);
+void cmdDrop_doIt(const Player * player, const Order * order);
+void cmdSwim_doIt(const Player * player, const Order * order);
+void cmdExits_doIt(const Player * player, const Order * order);
+void cmdWear_doIt(const Player * player, const Order * order);
+void cmdDisrobe_doIt(const Player * player, const Order * order);
+void cmdWait_doIt(const Player * player, const Order * order);
+void cmdBreak_doIt(const Player * player, const Order * order);
+void cmdPush_doIt(const Player * player, const Order * order);
+void cmdPull_doIt(const Player * player, const Order * order);
+void cmdLookAround_doIt(const Player * player, const Order * order);
+void cmdDbg_doIt(const Player * player, const Order * order);
 
 Cmd cmds[NumCmds];
 Cmd * cmdNop;
@@ -172,13 +174,13 @@ void init_cmds()
     cmds[NumCmds - 1].words = "nop";
 }
 
-void cmdGo_doIt(Player * player, Order * order)
+void cmdGo_doIt(const Player * player, const Order * order)
 {
 	int dest_loc = locs[ player->num_loc ].exits[ order->cmd->cmdId ];
 
 	if ( dest_loc < NumLocs ) {
 		player->num_loc = dest_loc;
-		do_loc_desc( player->num_loc );
+		do_loc_desc( player );
 	} else {
 		println( "No se puede tomar ese rumbo." );
 	}
@@ -186,12 +188,12 @@ void cmdGo_doIt(Player * player, Order * order)
 	return;
 }
 
-void cmdHelp_doIt(Player * player, Order * order)
+void cmdHelp_doIt(const Player * player, const Order * order)
 {
     // Not used with this game engine.
 }
 
-void cmdEnd_doIt(Player * player, Order * order)
+void cmdEnd_doIt(const Player * player, const Order * order)
 {
     if ( ask_yes_no( "Confirma que deseas terminar (s/n): " ) ) {
         cls();
@@ -201,12 +203,12 @@ void cmdEnd_doIt(Player * player, Order * order)
     }
 }
 
-void cmdLookAround_doIt(Player * player, Order * order)
+void cmdLookAround_doIt(const Player * player, const Order * order)
 {
-	do_loc_desc( player->num_loc );
+	do_loc_desc( player );
 }
 
-void cmdInv_doIt(Player * player, Order * order)
+void cmdInv_doIt(const Player * player, const Order * order)
 {
 	int num = 0;
 	int i = 0;
@@ -223,7 +225,7 @@ void cmdInv_doIt(Player * player, Order * order)
 	return;
 }
 
-void cmdEx_doIt(Player * player, Order * order)
+void cmdEx_doIt(const Player * player, const Order * order)
 {
 	char * msg = "No ves eso en derredor. O no te parece importante.";
 
@@ -240,7 +242,7 @@ void cmdEx_doIt(Player * player, Order * order)
 	println( msg );
 }
 
-void cmdExits_doIt(Player * player, Order * order)
+void cmdExits_doIt(const Player * player, const Order * order)
 {
     static const char * salidas[] = {
         "norte", "sur", "este", "oeste",
@@ -256,7 +258,7 @@ void cmdExits_doIt(Player * player, Order * order)
         if ( loc->exits[ i ] < NumLocs ) {
           hay_salidas = true;
           print( salidas[ i ] );
-          print_char( ' ' );
+          fputc_cons( ' ' );
         }
     }
 
@@ -267,9 +269,9 @@ void cmdExits_doIt(Player * player, Order * order)
     lf();
 }
 
-void cmdTake_doIt(Player * player, Order * order)
+void cmdTake_doIt(const Player * player, const Order * order)
 {
-	Obj * obj = order->obj1;
+	const Obj * obj = order->obj1;
 	const char * msg = MSG_CANT_SEE;
 
 	if ( obj != NULL ) {
@@ -278,8 +280,8 @@ void cmdTake_doIt(Player * player, Order * order)
 				msg = MSG_DONE;
 				obj->num_loc = PLAYER_NUM_LOC;
                 
-				do_loc_desc( player->num_loc );                
-                set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+				do_loc_desc( player );                
+                zx_movecursorto( SCR_FIRST_LINE_ANSWER, 0 );
                 set_highlighted_colors();
 			} else {
 				msg = MSG_IMPOSSIBLE;
@@ -294,9 +296,9 @@ void cmdTake_doIt(Player * player, Order * order)
 	println( msg );
 }
 
-void cmdDrop_doIt(Player * player, Order * order)
+void cmdDrop_doIt(const Player * player, const Order * order)
 {
-	char * msg = MSG_DONT_CARRIED;
+	const char * msg = MSG_DONT_CARRIED;
 
 	if ( order->obj1 != NULL ) {
 		if ( order->obj1->num_loc == PLAYER_NUM_LOC ) {
@@ -305,7 +307,7 @@ void cmdDrop_doIt(Player * player, Order * order)
     			order->obj1->num_loc = player->num_loc;
                 
     			do_loc_desc( player );
-                set_cursor_pos( FIRST_LINE_ANSWER, 0 );
+                zx_movecursorto( SCR_FIRST_LINE_ANSWER, 0 );
                 set_highlighted_colors();
             } else {
                 msg = "No puedes, lo llevas puesto.";
@@ -316,14 +318,14 @@ void cmdDrop_doIt(Player * player, Order * order)
 	println( msg );
 }
 
-void cmdSwim_doIt(Player * player, Order * order)
+void cmdSwim_doIt(const Player * player, const Order * order)
 {
 	// Not used with this game.
 }
 
-void cmdWear_doIt(Player * player, Order * order)
+void cmdWear_doIt(const Player * player, const Order * order)
 {
-    char * msg;
+    const char * msg;
     Obj * obj = order->obj1;
 
 	if ( obj != NULL
@@ -346,9 +348,9 @@ void cmdWear_doIt(Player * player, Order * order)
     println( msg );
 }
 
-void cmdDisrobe_doIt(Player * player, Order * order)
+void cmdDisrobe_doIt(const Player * player, const Order * order)
 {
-    char * msg;
+    const char * msg;
     Obj * obj = order->obj1;
 
 	if ( obj != NULL ) {
@@ -369,32 +371,32 @@ void cmdDisrobe_doIt(Player * player, Order * order)
     println( msg );
 }
 
-void cmdWait_doIt(Player * player, Order * order)
+void cmdWait_doIt(const Player * player, const Order * order)
 {
     println( "Pasa el tiempo..." );
 }
 
-void cmdBreak_doIt(Player * player, Order * order)
+void cmdBreak_doIt(const Player * player, const Order * order)
 {
     println( "La simple violencia no soluciona nada en este caso." );
 }
 
-void cmdPush_doIt(Player * player, Order * order)
+void cmdPush_doIt(const Player * player, const Order * order)
 {
     println( "No tiene sentido." );
 }
 
-void cmdPull_doIt(Player * player, Order * order)
+void cmdPull_doIt(const Player * player, const Order * order)
 {
     println( "No tiene sentido." );
 }
 
-void cmdDbg_doIt(Player * player, Order * order)
+void cmdDbg_doIt(const Player * player, const Order * order)
 {
     println( MSG_CANT_DO );
 }
 
-void cmdNop_doIt(Player * player, Order * order)
+void cmdNop_doIt(const Player * player, const Order * order)
 {
     println( MSG_CANT_DO );
 }
