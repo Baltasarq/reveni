@@ -1,0 +1,1 @@
+{"buildTargets":["all","clean","cmds","cmds.o","ctrl","ctrl.o","launch","locs","locs.o","objs","objs.o","player","player.o","reveni","run"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

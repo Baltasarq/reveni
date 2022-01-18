@@ -1,0 +1,10 @@
+make all --dry-run --keep-going --print-directory
+make: Entering directory '/home/baltasarq/Dropbox/Prys/if/prys/reveni'
+zcc +zx -O3 -c ctrl.c -o obj/ctrl.o
+zcc +zx -O3 -c player.c -o obj/player.o
+zcc +zx -O3 -c locs.c -o obj/locs.o
+zcc +zx -O3 -c objs.c -o obj/objs.o
+zcc +zx -O3 -c cmds.c -o obj/cmds.o
+zcc +zx -O3 -create-app reveni.c obj/ctrl.o  obj/player.o  obj/locs.o  obj/objs.o  obj/cmds.o -oreveni -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic -pragma-define:CRT_ORG_CODE=24576
+make: Leaving directory '/home/baltasarq/Dropbox/Prys/if/prys/reveni'
+ 
