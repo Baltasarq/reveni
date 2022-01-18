@@ -248,13 +248,13 @@ void draw_pic(const byte * ddata)
 				break;
 			case DCMD_Circle:
 				++ddata;
-				//circle( *ddata, *( ddata + 1 ),
-				//			 *( ddata + 2 ), 1 );
+				circle( *ddata, *( ddata + 1 ),
+							 *( ddata + 2 ), 1 );
 				ddata += 2;
 				break;
 			case DCMD_Fill:
 				++ddata;
-				//fill( *ddata, *( ddata + 1 ) );
+				fill( *ddata, *( ddata + 1 ) );
 				++ddata;
 				break;
 		}
