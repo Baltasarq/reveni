@@ -13,7 +13,7 @@ Loc locs[NumLocs];
 
 
 // Pic's data
-// Alunizaje
+// Landing
 static unsigned char pic_data0[] = {
     DCMD_Circle, 50, 10, 10,
     DCMD_Fill, 50, 10,

@@ -5,10 +5,10 @@
 #include "objs.h"
 #include "ctrl.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <spectrum.h>
 
 
 const int PLAYER_NUM_LOC = -128;

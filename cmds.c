@@ -7,18 +7,14 @@
 #include "objs.h"
 #include "ctrl.h"
 
-#include <spectrum.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 
-#define RELEASE 1
-
-
-extern int read_key();
+extern byte read_key();
 
 
 const char * MSG_DONE = "Hecho.";
@@ -48,10 +44,9 @@ void cmdBreak_doIt(const Player * player, const Order * order);
 void cmdPush_doIt(const Player * player, const Order * order);
 void cmdPull_doIt(const Player * player, const Order * order);
 void cmdLookAround_doIt(const Player * player, const Order * order);
-void cmdDbg_doIt(const Player * player, const Order * order);
 
 Cmd cmds[NumCmds];
-Cmd * cmdNop;
+const Cmd * cmdNop;
 
 void init_cmds()
 {
@@ -161,11 +156,6 @@ void init_cmds()
     cmds[20].cmdId = CmdLookAround;
     cmds[20].doIt = cmdLookAround_doIt;
     cmds[20].words = " m mira mirar ";
-
-    // Debug
-    cmds[21].cmdId = CmdDbg;
-    cmds[21].doIt = cmdDbg_doIt;
-    cmds[21].words = " _dbg ";
 
     // Nop
     cmdNop = &cmds[NumCmds - 1];
@@ -389,11 +379,6 @@ void cmdPush_doIt(const Player * player, const Order * order)
 void cmdPull_doIt(const Player * player, const Order * order)
 {
     println( "No tiene sentido." );
-}
-
-void cmdDbg_doIt(const Player * player, const Order * order)
-{
-    println( MSG_CANT_DO );
 }
 
 void cmdNop_doIt(const Player * player, const Order * order)

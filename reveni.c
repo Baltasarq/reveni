@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <spectrum.h>
+#include <stdio.h>
 
 
 void draw_presentation()

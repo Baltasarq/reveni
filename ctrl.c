@@ -15,7 +15,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <spectrum.h>
 #include <sound.h>
 
 
@@ -236,31 +235,31 @@ void print(const char * txt)
 }
 
 void draw_pic(const byte * ddata)
-{
-	if ( ddata != NULL ) {
-		byte pos = 0;
-		
-		for(;ddata[ pos ] != DCMD_EOD; ++pos) {
-			switch( ddata[ pos ] ) {
-				case DCMD_Line:
-					++pos;
-					draw( ddata[ pos ], ddata[ pos + 1 ],
-						ddata[ pos + 2 ], ddata[ pos + 3 ] );
-					pos += 3;
-					break;
-				case DCMD_Circle:
-					++pos;
-					circle( ddata[ pos ], ddata[ pos + 1 ],
-							ddata[ pos + 2 ], 1 );
-					pos += 2;
-					break;
-				case DCMD_Fill:
-					++pos;
-					fill( ddata[ pos ], ddata[ pos + 1 ] );
-					++pos;
-					break;
-			}
+{		
+	while( ddata != NULL
+	    && *ddata != DCMD_EOD )
+	{
+		switch( *ddata ) {
+			case DCMD_Line:
+				++ddata;
+				draw( ddata, *( ddata + 1 ),
+					  *( ddata + 2 ), *( ddata + 3 ) );
+				ddata += 3;
+				break;
+			case DCMD_Circle:
+				++ddata;
+				//circle( *ddata, *( ddata + 1 ),
+				//			 *( ddata + 2 ), 1 );
+				ddata += 2;
+				break;
+			case DCMD_Fill:
+				++ddata;
+				//fill( *ddata, *( ddata + 1 ) );
+				++ddata;
+				break;
 		}
+
+		++ddata;
 	}
     
     return;

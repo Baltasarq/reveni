@@ -1,11 +1,11 @@
 CC=zcc
-CFLAGS=+zx
+CFLAGS=+zx -O3
 OBJ=obj
 
 all: reveni
 
 reveni: reveni.c ctrl player locs objs cmds
-	$(CC) $(CFLAGS) -create-app reveni.c $(OBJ)/ctrl.o  $(OBJ)/player.o  $(OBJ)/locs.o  $(OBJ)/objs.o  $(OBJ)/cmds.o -oreveni -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic
+	$(CC) $(CFLAGS) -create-app reveni.c $(OBJ)/ctrl.o  $(OBJ)/player.o  $(OBJ)/locs.o  $(OBJ)/objs.o  $(OBJ)/cmds.o -oreveni -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic -pragma-define:CRT_ORG_CODE=24576
 
 ctrl: ctrl.h ctrl.c
 	$(CC) $(CFLAGS) -c ctrl.c -o $(OBJ)/ctrl.o

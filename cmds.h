@@ -24,7 +24,6 @@ typedef enum _CmdId {
     CmdPush,
     CmdPull,
     CmdLookAround,
-    CmdDbg,
 
 	Cmd_Nop
 } CmdId;
@@ -41,11 +40,11 @@ typedef struct _Cmd {
 } Cmd;
 
 typedef struct _Order {
-	char * verb;
-	char * word1;
-	char * word2;
+	const char * verb;
+	const char * word1;
+	const char * word2;
 
-	const Cmd  * cmd;
+	const Cmd * cmd;
 	const Obj * obj1;
 	const Obj * obj2;
 } Order;
