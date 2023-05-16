@@ -10,7 +10,7 @@ EXEC=reveni
 all: $(EXEC)
 
 $(EXEC): reveni.c ctrl.o player.o locs.o objs.o cmds.o
-	$(CC) $(CFLAGS) -create-app reveni.c $(OBJ)/ctrl.o  $(OBJ)/player.o  $(OBJ)/locs.o  $(OBJ)/objs.o  $(OBJ)/cmds.o -o$(EXEC) -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic -pragma-define:CRT_ORG_CODE=24576
+	$(CC) $(CFLAGS) -create-app reveni.c $(OBJ)/ctrl.o  $(OBJ)/player.o  $(OBJ)/locs.o  $(OBJ)/objs.o  $(OBJ)/cmds.o -o$(EXEC) -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1 -pragma-define:CRT_ENABLE_STDIO=0 -pragma-redirect:fputc_cons=fputc_cons_generic -pragma-define:CRT_ORG_CODE=26112
 
 ctrl.o: ctrl.h ctrl.c
 	$(CC) $(CFLAGS) -c ctrl.c -o $(OBJ)/$@
